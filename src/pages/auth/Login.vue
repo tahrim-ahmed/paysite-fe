@@ -1,8 +1,21 @@
 <template>
 	<q-layout>
+		<q-header elevated>
+			<q-toolbar>
+				<q-toolbar-title>
+					Pay Site
+				</q-toolbar-title>
+
+				<div>
+					<q-btn class="q-mr-md" dense flat no-caps stretch label="Register" @click="addDialog = true"/>
+					<q-btn dense flat no-caps stretch label="Tips" @click="tipsDialog = true"/>
+				</div>
+
+			</q-toolbar>
+		</q-header>
 		<q-page-container>
 			<q-page class="flex flex-center">
-				<q-card :style="$q.platform.is.mobile? 'border-radius: 10px; margin-top: 50px' : 'border-radius: 10px; margin-top: 30px'">
+				<q-card :style="$q.platform.is.mobile? 'border-radius: 10px; margin-top: 50px' : 'border-radius: 10px; margin-top: 20px'">
 					<q-tabs class="q-pt-lg" v-model="tab" dense active-color="primary">
 						<q-tab name="info" label="Login to continue"/>
 					</q-tabs>
@@ -29,6 +42,53 @@
 						</q-tab-panel>
 					</q-tab-panels>
 				</q-card>
+
+				<!--	Registration  -->
+				<q-dialog v-model="addDialog" persistent>
+					<q-card>
+						<q-bar class="bg-primary text-white">
+							<q-space />
+							<q-btn dense flat icon="close" @click="closeAddDialog">
+								<q-tooltip>Close</q-tooltip>
+							</q-btn>
+						</q-bar>
+						<q-tabs class="q-pt-none" v-model="tab" dense active-color="primary">
+							<q-tab name="info" label="Register"/>
+						</q-tabs>
+						<q-tab-panels v-model="tab" class="bg-grey-1" animated>
+							<q-tab-panel name="info">
+								<q-form greedy @submit.prevent="register">
+									<q-card-section>
+										<div class="row q-col-gutter-md">
+											<div class="col-12 col-md-6 q-pt-md">
+												<q-input v-model="registration.firstName" label="First Name" outlined dense/>
+											</div>
+											<div class="col-12 col-md-6 q-pt-md">
+												<q-input v-model="registration.lastName" label="Last Name" outlined dense/>
+											</div>
+											<div class="col-12 col-md-12 q-pt-md">
+												<q-input v-model="registration.email" label="Email" outlined dense/>
+											</div>
+											<div class="col-12 col-md-12 q-pt-md">
+												<q-input v-model="registration.contact" label="Contact No" outlined dense/>
+											</div>
+											<div class="col-12 col-md-12 q-pt-md">
+												<q-input v-model="registration.password" label="Password" type="password" outlined dense/>
+											</div>
+										</div>
+										<div class="row justify-end q-mt-md">
+											<q-btn color="primary" label="Register" type="submit"/>
+										</div>
+									</q-card-section>
+								</q-form>
+							</q-tab-panel>
+						</q-tab-panels>
+					</q-card>
+				</q-dialog>
+
+				<q-dialog v-model="tipsDialog">
+					<q-img src="images/steps.png"/>
+				</q-dialog>
 			</q-page>
 		</q-page-container>
 	</q-layout>
@@ -39,16 +99,38 @@ import {Component, Vue} from 'vue-property-decorator';
 import {LoginInterface} from "src/customs/interfaces/login.interface";
 import {AxiosResponseInterface} from "src/customs/interfaces/axios-response.interface";
 import {Loading, QSpinnerCube} from "quasar";
-import {Axios} from "boot/axios";
+import {RegistrationInterface} from "src/customs/interfaces/registration.interface";
 
 @Component({})
 export default class Index extends Vue {
 	tab = 'info'
 
+	addDialog: boolean = false
+	tipsDialog: boolean = false
+
 	login: LoginInterface = {
-		email: "mma.rifat66@gmail.com",
-		password: "123456",
+		email: '',
+		password: '',
 		isRemembered: true
+	}
+
+	registration: RegistrationInterface = {
+		firstName: '',
+		lastName: '',
+		email: '',
+		contact: '',
+		password: '',
+		payment: 0,
+	}
+
+	closeAddDialog() {
+		this.addDialog = false;
+		this.registration.firstName = ''
+		this.registration.lastName = ''
+		this.registration.email = ''
+		this.registration.password = ''
+		this.registration.contact = ''
+
 	}
 
 	loginFunc() {
@@ -64,6 +146,36 @@ export default class Index extends Vue {
 					const loginResponse = response.data as AxiosResponseInterface
 					await this.$store.dispatch("setToken", loginResponse.accessToken)
 					await this.$store.dispatch("setCurrentUser", loginResponse)
+					await this.$router.replace({name: 'dashboard'}).catch(e => e)
+					this.$q.notify({
+						message: `Login Success`,
+						type: 'positive',
+						timeout: 4000,
+					})
+				}
+			} else {
+				this.$q.notify({
+					message: 'Login failed!!',
+					type: 'negative'
+				})
+			}
+		}).catch(() => {
+			this.$q.notify({
+				message: 'Something error',
+				type: 'negative'
+			})
+		}).finally(() => {
+			Loading.hide()
+		})
+	}
+
+	register() {
+		//@ts-ignore
+		Loading.show({spinner: QSpinnerCube})
+		this.$axios.post('user/login', this.registration).then(async (response) => {
+			if (!(response instanceof Error)) {
+				if (response.status > 199 && response.status < 300) {
+					const loginResponse = response.data as AxiosResponseInterface
 					await this.$router.replace({name: 'dashboard'}).catch(e => e)
 					this.$q.notify({
 						message: `Login Success`,
