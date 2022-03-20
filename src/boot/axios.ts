@@ -10,7 +10,7 @@ declare module 'vue/types/vue' {
 	}
 }
 const Axios = axios.create({
-	baseURL: 'http://localhost:7575/api/v1',
+	baseURL: 'http://localhost:8989/api/v1',
 	headers: {
 		'key' : 'AIzaSyBaIfequKgNU79QbEmM8iJ45zxP0SrEReo'
 	}

@@ -100,6 +100,8 @@ import {LoginInterface} from "src/customs/interfaces/login.interface";
 import {AxiosResponseInterface} from "src/customs/interfaces/axios-response.interface";
 import {Loading, QSpinnerCube} from "quasar";
 import {RegistrationInterface} from "src/customs/interfaces/registration.interface";
+import {ResponseStatusEnum} from "src/customs/enum/response-status.enum";
+import jwt_decode from "jwt-decode";
 
 @Component({})
 export default class Index extends Vue {
@@ -109,8 +111,8 @@ export default class Index extends Vue {
 	tipsDialog: boolean = false
 
 	login: LoginInterface = {
-		email: '',
-		password: '',
+		email: 'm@gmail.com',
+		password: '123456',
 		isRemembered: true
 	}
 
@@ -140,22 +142,24 @@ export default class Index extends Vue {
 		}
 		//@ts-ignore
 		Loading.show({spinner: QSpinnerCube})
-		this.$axios.post('user/login', this.login).then(async (response) => {
+		this.$axios.post('auth/login', this.login).then(async (response) => {
 			if (!(response instanceof Error)) {
-				if (response.status > 199 && response.status < 300) {
-					const loginResponse = response.data as AxiosResponseInterface
-					await this.$store.dispatch("setToken", loginResponse.accessToken)
-					await this.$store.dispatch("setCurrentUser", loginResponse)
+				const loginResponse = response.data as AxiosResponseInterface
+				if (loginResponse.status === ResponseStatusEnum.SUCCESS) {
+					await this.$store.dispatch("setToken", loginResponse.payload.data)
+					const userData: any = {} = jwt_decode(this.$store.getters.token)
+					await this.$store.dispatch("setCurrentUser", userData.response)
 					await this.$router.replace({name: 'dashboard'}).catch(e => e)
 					this.$q.notify({
-						message: `Login Success`,
+						message: `${loginResponse.message}`,
 						type: 'positive',
 						timeout: 4000,
 					})
 				}
 			} else {
+				const fail = JSON.parse(response.request.response);
 				this.$q.notify({
-					message: 'Login failed!!',
+					message: fail?.message || 'Login failed!!',
 					type: 'negative'
 				})
 			}
@@ -172,20 +176,20 @@ export default class Index extends Vue {
 	register() {
 		//@ts-ignore
 		Loading.show({spinner: QSpinnerCube})
-		this.$axios.post('user/login', this.registration).then(async (response) => {
+		this.$axios.post('user/registration', this.registration).then(async (response) => {
 			if (!(response instanceof Error)) {
 				if (response.status > 199 && response.status < 300) {
 					const loginResponse = response.data as AxiosResponseInterface
 					await this.$router.replace({name: 'dashboard'}).catch(e => e)
 					this.$q.notify({
-						message: `Login Success`,
+						message: `Registration Success`,
 						type: 'positive',
 						timeout: 4000,
 					})
 				}
 			} else {
 				this.$q.notify({
-					message: 'Login failed!!',
+					message: 'Registration failed!!',
 					type: 'negative'
 				})
 			}

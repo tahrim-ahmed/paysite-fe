@@ -38,7 +38,7 @@
 						      </q-avatar>
 
 						      <div class="q-mt-md q-mb-xs text-bold">
-							      {{$store.getters.currentUser? $store.getters.currentUser.firstName+' '+$store.getters.currentUser.lastName :
+							      {{$store.getters.currentUser? $store.getters.currentUser.userName :
 								      'null'}}
 						      </div>
 
@@ -48,7 +48,7 @@
 
 					      <div class="column">
 						      <div class="text-h6 q-mb-sm text-center">Settings</div>
-						      <q-item :to="{name:'profile'}" clickable dense tabindex="0" v-close-popup>
+						      <q-item clickable dense tabindex="0" v-close-popup>
 							      <q-item-section side>
 								      <q-icon color="primary" name="manage_accounts" text-color="white"/>
 							      </q-item-section>
