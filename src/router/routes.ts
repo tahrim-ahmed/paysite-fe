@@ -14,6 +14,9 @@ const routes: RouteConfig[] = [
 				path: 'dashboard',
 				name: 'dashboard',
 				component: () => import('pages/dashboard/Dashboard.vue'),
+				meta: {
+					onlyPaid: true
+				}
 			},
 			{
 				path: 'users',
@@ -24,6 +27,14 @@ const routes: RouteConfig[] = [
 				path: 'files',
 				name: 'files',
 				component: () => import('pages/files/Files.vue')
+			},
+			{
+				path: 'payment',
+				name: 'payment',
+				component: () => import('pages/payment/Payment.vue'),
+				meta: {
+					notPaid: true
+				}
 			},
 		]
 	},

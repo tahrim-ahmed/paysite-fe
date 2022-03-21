@@ -1,14 +1,7 @@
 import {store} from 'quasar/wrappers';
 import Vuex from 'vuex';
-import {TokenInterface} from "src/customs/interfaces/token.interface";
 import {
-	clearStorage,
-	destroyCurrentUser,
-	destroyToken,
-	getCurrentUser,
-	getToken,
-	setCurrentUser,
-	setPermission,
+	setCurrentUser, setPayment,
 	setToken
 } from "src/customs/utils/token.util";
 import {SessionStorage} from "quasar";
@@ -28,6 +21,7 @@ export interface StateInterface {
 	// Declared as unknown to avoid linting issue. Best to strongly type as per the line above.
 	token: string;
 	currentUser: any;
+	payment: boolean;
 }
 
 export default store(async function ({Vue}) {
@@ -37,6 +31,7 @@ export default store(async function ({Vue}) {
 		state: {
 			token: SessionStorage.getItem('pstwbst'),
 			currentUser: SessionStorage.getItem('currentUser'),
+			payment: SessionStorage.getItem('currentUser'),
 		},
 		mutations: {
 			setToken(state, token: string) {
@@ -50,12 +45,18 @@ export default store(async function ({Vue}) {
 				SessionStorage.set('currentUser', user);
 			},
 
+			setPayment(state, payment: any) {
+				state.payment = payment;
+				SessionStorage.set('payment', payment);
+			},
+
 			/********* destroy and logout **********/
 			async logout(state) {
 				state.token = '';
 				state.currentUser = {};
 				SessionStorage.remove('pstwbst');
 				SessionStorage.remove('currentUser');
+				SessionStorage.remove('payment');
 			}
 		},
 		actions: {
@@ -69,6 +70,11 @@ export default store(async function ({Vue}) {
 				state.commit("setCurrentUser", user)
 			},
 
+			async setPayment(state, payment: any) {
+				await setPayment(payment);
+				state.commit("setPayment", payment)
+			},
+
 			/********* destroy and logout **********/
 			async logout(state) {
 				await state.commit("logout");
@@ -77,6 +83,7 @@ export default store(async function ({Vue}) {
 		getters: {
 			token: (state) => state.token,
 			currentUser: (state) => state.currentUser,
+			payment: (state) => state.payment,
 		}
 	});
 });

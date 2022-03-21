@@ -16,16 +16,6 @@
         </q-toolbar-title>
 
 	      <div>
-		      <q-btn dense flat no-caps size="lg" stretch icon="notifications">
-			      <q-badge color="red" floating>4</q-badge>
-			      <q-menu>
-				      <div class="row no-wrap q-pa-md bg-blue-1">
-					      aaa
-				      </div>
-			      </q-menu>
-		      </q-btn>
-	      </div>
-	      <div>
 		      <q-btn dense flat no-caps size="xs" stretch>
 			      <q-avatar>
 				      <q-icon name="fas fa-cogs" size="sm"/>

@@ -70,7 +70,7 @@
 												<q-input v-model="registration.email" label="Email" outlined dense/>
 											</div>
 											<div class="col-12 col-md-12 q-pt-md">
-												<q-input v-model="registration.contact" label="Contact No" outlined dense/>
+												<q-input v-model="registration.phone" label="Contact No" outlined dense/>
 											</div>
 											<div class="col-12 col-md-12 q-pt-md">
 												<q-input v-model="registration.password" label="Password" type="password" outlined dense/>
@@ -98,7 +98,7 @@
 import {Component, Vue} from 'vue-property-decorator';
 import {LoginInterface} from "src/customs/interfaces/login.interface";
 import {AxiosResponseInterface} from "src/customs/interfaces/axios-response.interface";
-import {Loading, QSpinnerCube} from "quasar";
+import {Loading, QSpinnerClock, QSpinnerCube} from "quasar";
 import {RegistrationInterface} from "src/customs/interfaces/registration.interface";
 import {ResponseStatusEnum} from "src/customs/enum/response-status.enum";
 import jwt_decode from "jwt-decode";
@@ -120,7 +120,7 @@ export default class Index extends Vue {
 		firstName: '',
 		lastName: '',
 		email: '',
-		contact: '',
+		phone: '',
 		password: '',
 		payment: 0,
 	}
@@ -131,8 +131,7 @@ export default class Index extends Vue {
 		this.registration.lastName = ''
 		this.registration.email = ''
 		this.registration.password = ''
-		this.registration.contact = ''
-
+		this.registration.phone = ''
 	}
 
 	loginFunc() {
@@ -149,7 +148,15 @@ export default class Index extends Vue {
 					await this.$store.dispatch("setToken", loginResponse.payload.data)
 					const userData: any = {} = jwt_decode(this.$store.getters.token)
 					await this.$store.dispatch("setCurrentUser", userData.response)
-					await this.$router.replace({name: 'dashboard'}).catch(e => e)
+					console.log(this.$store.getters.currentUser)
+					const userPayment = userData.response.paymentStatus === 1
+					await this.$store.dispatch("setPayment", userPayment)
+					if(this.$store.getters.payment === true) {
+						await this.$router.replace({name: 'dashboard'}).catch(e => e)
+					}
+					else {
+						await this.$router.replace({name: 'payment'}).catch(e => e)
+					}
 					this.$q.notify({
 						message: `${loginResponse.message}`,
 						type: 'positive',
@@ -175,30 +182,24 @@ export default class Index extends Vue {
 
 	register() {
 		//@ts-ignore
-		Loading.show({spinner: QSpinnerCube})
-		this.$axios.post('user/registration', this.registration).then(async (response) => {
+		Loading.show({spinner: QSpinnerClock, spinnerSize: '5rem', backgroundColor: 'grey'})
+		this.$axios.post('users/registration', this.registration).then(response => {
 			if (!(response instanceof Error)) {
-				if (response.status > 199 && response.status < 300) {
-					const loginResponse = response.data as AxiosResponseInterface
-					await this.$router.replace({name: 'dashboard'}).catch(e => e)
-					this.$q.notify({
-						message: `Registration Success`,
-						type: 'positive',
-						timeout: 4000,
-					})
-				}
+				const res = response.data as AxiosResponseInterface
+				this.$q.notify({
+					message: res.message,
+					caption: 'Please Login!!',
+					type: res.status === ResponseStatusEnum.CREATED ? 'positive' : 'negative'
+				})
 			} else {
 				this.$q.notify({
-					message: 'Registration failed!!',
+					message: 'Already registered!!',
+					caption: 'Please Login!!',
 					type: 'negative'
 				})
 			}
-		}).catch(() => {
-			this.$q.notify({
-				message: 'Something error',
-				type: 'negative'
-			})
 		}).finally(() => {
+			this.closeAddDialog();
 			Loading.hide()
 		})
 	}

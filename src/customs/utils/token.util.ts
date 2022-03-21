@@ -7,6 +7,7 @@ const {Storage} = Plugins
 
 const tokenKey = 'login'
 const currentUserKey = 'c_user'
+const paymentKey = 'c_payment'
 
 export async function getToken(): Promise<TokenInterface> {
 	const sessionStorage = await SessionStorage.getItem(tokenKey)
@@ -31,8 +32,8 @@ export async function setCurrentUser(token: any): Promise<void> {
 	await Storage.set({key: currentUserKey, value: JSON.stringify(token)})
 }
 
-export async function setPermission(token: any): Promise<void> {
-	await Storage.set({key: currentUserKey, value: JSON.stringify(token)})
+export async function setPayment(token: any): Promise<void> {
+	await Storage.set({key: paymentKey, value: JSON.stringify(token)})
 }
 
 export async function destroyCurrentUser(): Promise<void> {
