@@ -161,7 +161,7 @@ export default class Products extends Vue {
 	/************* update ***************/
 	updateDialog: boolean = false;
 	updateProduct: ProductInterface = {
-		_id: '',
+		id: '',
 		name: '',
 		packSize: ''
 	}
@@ -239,7 +239,7 @@ export default class Products extends Vue {
 	}
 
 	saveUpdate() {
-		this.$axios.put('products/save/'+this.updateProduct._id, {
+		this.$axios.put('products/save/'+this.updateProduct.id, {
 			product: this.updateProduct
 		}).then(value => {
 			this.$q.notify({

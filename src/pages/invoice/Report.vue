@@ -50,10 +50,31 @@
 										<q-card-section>
 											<div class="row q-col-gutter-md">
 												<div class="col-12 col-md-12 q-pt-md">
-													<q-input v-model="invoice.client" label="Select Client" outlined dense/>
+													<q-select v-model="invoice.client" :options="clientOptions" class="col col-4" clearable
+													          input-debounce="1000" label="Select Client" map-options option-label="name"
+													          use-input @filter="filterClientFn" outlined dense>
+														<template v-slot:no-option>
+															<q-item>
+																<q-item-section class="text-grey">
+																	No results
+																</q-item-section>
+															</q-item>
+														</template>
+
+														<template v-slot:option="scope">
+															<q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
+																<q-item-section>
+																	<q-item-label>
+																		{{ scope.opt.code }} - {{ scope.opt.name }}
+																	</q-item-label>
+																</q-item-section>
+															</q-item>
+														</template>
+
+													</q-select>
 												</div>
 												<div class="col-12 col-md-12 q-pt-md">
-<!--													<q-select v-model="addMore.product" :options="productOptions" class="col col-4"
+												<q-select v-model="addMore.product" :options="productOptions" class="col col-4" clearable
 													          input-debounce="1000" label="Select Product" map-options option-label="name"
 													          use-input @filter="filterProductFn" outlined dense>
 														<template v-slot:no-option>
@@ -64,41 +85,29 @@
 															</q-item>
 														</template>
 
-													</q-select>-->
-													<q-input v-model="addMore.product.name" label="Product" outlined dense/>
+													</q-select>
 												</div>
-												<div class="col-12 col-md-6 q-pt-md">
-													<q-input v-model="addMore.unitPrice" label="Unit Price" outlined dense/>
+												<div class="col-12 col-md-4 q-pt-md">
+													<q-input v-model="addMore.unitTP" label="Unit TP" outlined dense/>
 												</div>
-												<div class="col-12 col-md-6 q-pt-md">
+												<div class="col-12 col-md-4 q-pt-md">
+													<q-input v-model="addMore.unitMRP" label="Unit MRP" outlined dense/>
+												</div>
+												<div class="col-12 col-md-4 q-pt-md">
 													<q-input v-model="addMore.quantity" label="Quantity" outlined dense/>
 												</div>
-												<div class="col-12 col-md-grow q-pt-md">
+												<div class="col-12 col-md-9 q-pt-md">
 													<q-input v-model="addMore.discount" label="Discount %" outlined dense/>
 												</div>
-												<div class="col-md-auto q-pt-md">
+												<div class="col-md-3 q-pt-md">
 													<q-btn class="full-width" label="Add Que" color="primary" @click="addToQueue" no-caps/>
 												</div>
-												<div :class="invoice.paymentType === 'Credit' ? 'col-12 col-md-6 q-pt-md' :
-												'col-12 col-md-12 q-pt-md'">
-													<q-select v-model="invoice.paymentType" :options="['Credit', 'Cash']" label="Payment Type"
-													          outlined dense/>
+												<div class="col-12 col-md-6 q-pt-md">
+													<q-select v-model="invoice.platform" :options="platformOptions" class="col col-4"
+													          input-debounce="1000" label="Select Platform" outlined dense @change="calculateTotal"/>
 												</div>
-												<div v-if="invoice.paymentType === 'Credit'" class="col-12 col-md-6 q-pt-md">
-													<q-input v-model="invoice.creditPeriod" mask="date" :rules="['date']" dense outlined
-													         hide-bottom-space clearable>
-														<template v-slot:append>
-															<q-icon name="event" class="cursor-pointer">
-																<q-popup-proxy ref="qDateProxy" cover transition-show="scale" transition-hide="scale">
-																	<q-date v-model="invoice.creditPeriod" minimal>
-																		<div class="row items-center justify-end">
-																			<q-btn v-close-popup label="Close" color="primary" flat />
-																		</div>
-																	</q-date>
-																</q-popup-proxy>
-															</q-icon>
-														</template>
-													</q-input>
+												<div class="col-12 col-md-6 q-pt-md">
+													<q-input v-model="invoice.others" label="Others Cost" outlined dense/>
 												</div>
 											</div>
 											<div class="row justify-end q-pt-md">
@@ -113,27 +122,21 @@
 							<div class="row q-ma-md">
 								<div class="col-12 col-md-6 text-bold">
 									Date: {{invDate}} <br>
-									Client: {{invoice.client}}
-								</div>
-								<div class="col-12 col-md-6 text-bold text-right">
-									Payment Type: {{invoice.paymentType ? invoice.paymentType : '-'}} <br>
-									<span v-if="invoice.paymentType === 'Credit' && invoice.creditPeriod">
-										Credit Period:
-										Till - {{invoice.creditPeriod ? $helper.convertDate(invoice.creditPeriod) : '-'}}
-									</span>
+									Client: {{invoice.client.name}}
 								</div>
 							</div>
 							<div class="q-ma-md">
 								<q-markup-table v-if="preservedProducts.length" bordered dense flat separator="cell" wrap-cells>
 									<thead class="bg-primary text-white text-center">
 									<tr>
-										<th class="text-center text-uppercase" colspan="8">Product Information</th>
+										<th class="text-center text-uppercase" colspan="9">Product Information</th>
 									</tr>
 									<tr>
 										<th>Product Name</th>
 										<th>Pack Size</th>
 										<th>Quantity</th>
-										<th>Unit Price</th>
+										<th>Unit TP</th>
+										<th>Unit MRP</th>
 										<th>Dis %</th>
 										<th>Dis Amount</th>
 										<th>Total</th>
@@ -143,7 +146,7 @@
 									<tbody class="text-center">
 									<tr v-for="(product, index) of preservedProducts" :key="product.product._id">
 										<td>{{ product.product.name }}</td>
-										<td>Pack Size</td>
+										<td>{{ product.product.packSize }}</td>
 										<td>
 											{{ product.quantity }}
 											<q-popup-edit v-model="product.quantity" persistent>
@@ -154,11 +157,20 @@
 											</q-popup-edit>
 										</td>
 										<td>
-											৳ {{ product.unitPrice }}
-											<q-popup-edit v-model="product.unitPrice" persistent>
+											৳ {{ product.unitTP }}
+											<q-popup-edit v-model="product.unitTP" persistent>
 												<template v-slot="scope">
 													<q-input v-model.number="scope.value" autofocus dense type="number"
-													         @keyup.enter="updateUnitPrice(index, scope.value)"/>
+													         @keyup.enter="updateUnitTP(index, scope.value)"/>
+												</template>
+											</q-popup-edit>
+										</td>
+										<td>
+											৳ {{ product.unitMRP }}
+											<q-popup-edit v-model="product.unitMRP" persistent>
+												<template v-slot="scope">
+													<q-input v-model.number="scope.value" autofocus dense type="number"
+													         @keyup.enter="updateUnitMRP(index, scope.value)"/>
 												</template>
 											</q-popup-edit>
 										</td>
@@ -172,11 +184,14 @@
 											</q-popup-edit>
 										</td>
 										<td>৳ {{
-												$helper.numberWithCommas((((Number(product.quantity) * Number(product.unitPrice)) * Number(product.discount)) / 100).toFixed(2))
+												$helper.numberWithCommas((((Number(product.quantity) * Number(product.unitMRP)) *
+														Number(product.discount)) / 100).toFixed(2))
 											}}
 										</td>
 										<td>৳ {{
-												$helper.numberWithCommas(((Number(product.quantity) * Number(product.unitPrice)) - (((Number(product.quantity) * Number(product.unitPrice)) * Number(product.discount)) / 100)).toFixed(2))
+												$helper.numberWithCommas(((Number(product.quantity) * Number(product.unitMRP)) -
+														(((Number(product.quantity) * Number(product.unitMRP)) * Number(product.discount)) /
+																100)).toFixed(2))
 											}}
 										</td>
 										<td class="cursor-pointer">
@@ -184,9 +199,41 @@
 										</td>
 									</tr>
 									<tr>
-										<td class="text-right text-bold" colspan="6">Total</td>
+										<td class="text-right text-bold" colspan="7">Total TP</td>
 										<td class="text-right text-bold">৳ {{
-												$helper.numberWithCommas(invoice.totalAmount)
+												$helper.numberWithCommas(invoice.totalTP)
+											}}
+										</td>
+									</tr>
+									<tr>
+										<td class="text-right text-bold" colspan="7">Total Other Cost</td>
+										<td class="text-right text-bold">৳ {{
+												$helper.numberWithCommas(invoice.others)
+											}}
+										</td>
+									</tr>
+									<tr>
+										<td class="text-right text-bold" colspan="7">Total MRP</td>
+										<td class="text-right text-bold">৳ {{
+												$helper.numberWithCommas(invoice.totalMRP)
+											}}
+										</td>
+									</tr>
+									<tr v-if="invoice.platform === 'Daraz'">
+										<td class="text-right text-bold" colspan="7">Daraz Commission</td>
+										<td class="text-right text-bold">৳ {{
+												$helper.numberWithCommas((12 * Number(this.invoice.totalMRP)) / 100)
+											}}
+										</td>
+									</tr>
+									<tr>
+										<td class="text-right text-bold" colspan="7">Total Profit</td>
+										<td class="text-right text-bold">৳ {{
+												invoice.platform === 'Daraz' ? $helper.numberWithCommas( Number(invoice.totalMRP) -
+														Number(Number(invoice.totalTP) + Number(invoice.others) + Number((12 * Number(this.invoice.totalMRP)) / 100))) :
+														$helper.numberWithCommas(
+														Number(invoice.totalMRP) -
+														Number(Number(invoice.totalTP) + Number(invoice.others)))
 											}}
 										</td>
 									</tr>
@@ -211,7 +258,8 @@ import {ProductInterface} from "../../customs/interfaces/product.interface";
 
 interface AddMoreInterface {
 	product: ProductInterface,
-	unitPrice: number,
+	unitTP: number,
+	unitMRP: number,
 	quantity: number,
 	discount: number
 }
@@ -287,22 +335,28 @@ export default class List extends Vue {
 	addDialog: boolean = false;
 	invoice: InvoiceInterface = {
 		client: '',
-		totalAmount: 0,
-		paymentType: null,
-		creditPeriod: null,
+		totalTP: 0,
+		totalMRP: 0,
+		totalCommission: 0,
+		others: 0,
+		totalProfit: 0,
+		platform: '',
 		products: []
 	}
 
 	productOptions: any[] = [];
+	clientOptions: any[] = [];
+	platformOptions: any[] = ['Daraz', 'Facebook', 'Offline'];
 
 	preservedProducts: Array<AddMoreInterface> = [];
 
 	addMore: AddMoreInterface = {
 		product: {
-			_id: '', name: '', packSize: ''
+			id: '', name: '', packSize: ''
 		},
 		quantity: null,
-		unitPrice: null,
+		unitTP: null,
+		unitMRP: null,
 		discount: 0
 	}
 
@@ -314,17 +368,21 @@ export default class List extends Vue {
 
 	calculateTotal() {
 		if (this.addDialog) {
-			this.invoice.totalAmount = this.preservedProducts.reduce((acc, cur) => acc + ((cur.quantity * cur.unitPrice) - (((Number(cur.quantity) * Number(cur.unitPrice) *
+			this.invoice.totalMRP = this.preservedProducts.reduce((acc, cur) => acc + ((cur.quantity * cur.unitMRP) - (((Number(cur.quantity) *
+					Number(cur.unitMRP) *
 					cur.discount)) / 100)), 0)
+
+			this.invoice.totalTP = this.preservedProducts.reduce((acc, cur) => acc + ((cur.quantity * cur.unitTP)), 0)
 		}
 	}
 
 	resetAddMore() {
 		this.addMore = {
 			product: {
-				_id: '', name: '', packSize: ''
+				id: '', name: '', packSize: ''
 			},
-			unitPrice: null,
+			unitTP: null,
+			unitMRP: null,
 			quantity: null,
 			discount: null
 		}
@@ -335,8 +393,13 @@ export default class List extends Vue {
 		this.calculateTotal();
 	}
 
-	updateUnitPrice(index: number, price: number) {
-		this.preservedProducts[index].unitPrice = price;
+	updateUnitTP(index: number, price: number) {
+		this.preservedProducts[index].unitTP = price;
+		this.calculateTotal();
+	}
+
+	updateUnitMRP(index: number, price: number) {
+		this.preservedProducts[index].unitMRP = price;
 		this.calculateTotal();
 	}
 
@@ -377,40 +440,50 @@ export default class List extends Vue {
 			})
 		}).finally(() => {
 			Loading.hide()
-			this.invoice.client = ''
-			this.invoice.totalAmount = 0
-			this.invoice.creditPeriod = null
-			this.invoice.paymentType = 0
-			this.invoice.products = []
-			this.addDialog = false
+			this.closeAddDialog()
 		})
 	}
 
 	closeAddDialog() {
 		this.addDialog = false;
 		this.invoice.client = ''
-		this.invoice.totalAmount = 0
-		this.invoice.creditPeriod = null
-		this.invoice.paymentType = 0
+		this.invoice.totalTP = 0
+		this.invoice.totalMRP = 0
+		this.invoice.others = 0
+		this.invoice.platform = ''
 		this.invoice.products = []
-		this.resetAddMore()
+		this.preservedProducts = []
 	}
 
 	/*************** filter ***************/
 	filterProductFn(val: string, update: Function) {
-		/*let url = 'product/search?page=1&limit=5';
+		let url = 'product/search?page=1&limit=5';
 		if (val) url += '&search=' + val
 		this.$axios.get(url).then(async (response) => {
 			if (!(response instanceof Error)) {
 				const res = response.data as AxiosResponseInterface
 				if (res.status === ResponseStatusEnum.SUCCESS) {
 					update(() => {
-						const products = res?.page?.data || [];
-						this.productOptions = products.filter((f: any) => !this.preservedProducts.map(r => r.product.id).includes(f.id))
+						this.productOptions = res?.page?.data || []
 					})
 				}
 			}
-		})*/
+		})
+	}
+
+	filterClientFn(val: string, update: Function) {
+		let url = 'client/search?page=1&limit=5';
+		if (val) url += '&search=' + val
+		this.$axios.get(url).then(async (response) => {
+			if (!(response instanceof Error)) {
+				const res = response.data as AxiosResponseInterface
+				if (res.status === ResponseStatusEnum.SUCCESS) {
+					update(() => {
+						this.clientOptions = res?.page?.data || []
+					})
+				}
+			}
+		})
 	}
 }
 </script>

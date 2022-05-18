@@ -1,15 +1,19 @@
 interface invoiceDetailsInterface {
 	productID: string,
 	discount: number
-	unitPrice: number
+	unitTP: number
+	unitMRP: number
 	quantity: number
 }
 
 export interface InvoiceInterface {
-	_id?: string
+	id?: string
 	client: string
-	totalAmount: number
-	paymentType: 0 | 1 | boolean
-	creditPeriod?: Date
+	totalTP: number
+	totalMRP: number
+	totalCommission: number
+	others: number
+	totalProfit: number
+	platform: string
 	products: invoiceDetailsInterface[]
 }

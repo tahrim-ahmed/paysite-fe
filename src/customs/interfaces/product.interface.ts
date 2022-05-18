@@ -1,5 +1,5 @@
 export interface ProductInterface {
-	_id?: string,
+	id?: string,
 	name: string,
 	packSize: string,
 }
