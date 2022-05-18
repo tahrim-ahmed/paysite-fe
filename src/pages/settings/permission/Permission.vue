@@ -225,7 +225,7 @@
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
 import {Loading} from "quasar";
-import {PermissionInterface} from "src/customs/interfaces/permission.interface";
+import {PermissionInterface} from "../../../customs/interfaces/permission.interface";
 
 @Component({})
 export default class Permission extends Vue {

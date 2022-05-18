@@ -63,7 +63,7 @@
 													<q-input v-model="client.name" label="Client Name" outlined dense/>
 												</div>
 												<div class="col-12 col-md-6 q-pt-md">
-													<q-input v-model="client.contact" label="Client Contact" outlined dense/>
+													<q-input v-model="client.cell" label="Client Contact" outlined dense/>
 												</div>
 												<div class="col-12 col-md-6 q-pt-md">
 													<q-input v-model="client.email" label="Email" outlined dense/>
@@ -125,7 +125,7 @@
 													<q-input v-model="updateClient.name" label="Client Name" outlined dense/>
 												</div>
 												<div class="col-12 col-md-6 q-pt-md">
-													<q-input v-model="updateClient.contact" label="Client Contact" outlined dense/>
+													<q-input v-model="updateClient.cell" label="Client Contact" outlined dense/>
 												</div>
 												<div class="col-12 col-md-6 q-pt-md">
 													<q-input v-model="updateClient.email" label="Email" outlined dense/>
@@ -162,9 +162,11 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from 'vue-property-decorator';
-import {Loading} from "quasar";
-import {ClientInterface} from "src/customs/interfaces/client.interface";
+import {Component, Vue, Watch} from 'vue-property-decorator';
+import {Loading, QSpinnerClock} from "quasar";
+import {ClientInterface} from "../../customs/interfaces/client.interface";
+import {AxiosResponseInterface} from "../../customs/interfaces/axios-response.interface";
+import {ResponseStatusEnum} from "../../customs/enum/response-status.enum";
 
 @Component({})
 export default class List extends Vue {
@@ -200,8 +202,8 @@ export default class List extends Vue {
 			sortable: true
 		},{
 			label: 'Contact No',
-			name: 'contact',
-			field: 'contact',
+			name: 'cell',
+			field: 'cell',
 			align: 'left',
 			sortable: true
 		},{
@@ -233,7 +235,7 @@ export default class List extends Vue {
 	client: ClientInterface = {
 		code: '',
 		name: '',
-		contact: '',
+		cell: '',
 		billing: '',
 		shipping: '',
 		email: ''
@@ -247,10 +249,17 @@ export default class List extends Vue {
 		email: '',
 		billing: '',
 		shipping: '',
-		contact: '',
+		cell: '',
 	}
 
 	created() {
+		this.onRequest({
+			pagination: this.pagination
+		})
+	}
+
+	@Watch('filter', {immediate: true})
+	onFilter() {
 		this.onRequest({
 			pagination: this.pagination
 		})
@@ -265,10 +274,24 @@ export default class List extends Vue {
 		let url = 'client/pagination?page=' + this.pagination.page +
 				'&limit=' + this.pagination.rowsPerPage
 
-		this.$axios.get(url).then(value => {
-			this.rows = value.data
+		this.$axios.get(url).then(async (response) => {
+			if (!(response instanceof Error)) {
+				const res = response.data as AxiosResponseInterface
+
+				if (res.error) {
+					this.$q.notify({
+						message: res.message,
+						type: 'negative'
+					})
+				} else {
+					if (res.status === ResponseStatusEnum.SUCCESS) {
+						this.rows = res?.page?.data || []
+						this.pagination.rowsNumber = res.page.count
+					}
+				}
+			}
 		}).finally(() => {
-			this.isLoading = false
+			this.isLoading = false;
 		})
 	}
 
@@ -277,27 +300,20 @@ export default class List extends Vue {
 	}
 
 	saveClient() {
-		Loading.show()
-		this.$axios.post('client/create', {
-			...this.client
-		}).then(value => {
-			this.$q.notify({
-				message: 'Clients Added Success!',
-				type: 'positive'
-			})
-		}).then(()=> {
-			this.onRequest({
-				pagination: this.pagination
-			})
+		//@ts-ignore
+		Loading.show({spinner: QSpinnerClock, spinnerSize: '5rem', backgroundColor: 'grey'})
+		this.$axios.post('client', this.client).then(response => {
+			if (!(response instanceof Error)) {
+				const res = response.data as AxiosResponseInterface
+				this.$q.notify({
+					message: res.message,
+					type: res.status === ResponseStatusEnum.CREATED ? 'positive' : 'negative'
+				})
+				this.onFilter()
+			}
 		}).finally(() => {
+			this.closeAddDialog();
 			Loading.hide()
-			this.client.code = ''
-			this.client.name = ''
-			this.client.contact = ''
-			this.client.billing = ''
-			this.client.shipping = ''
-			this.client.email = ''
-			this.addDialog = false
 		})
 	}
 
@@ -305,7 +321,7 @@ export default class List extends Vue {
 		this.addDialog = false;
 		this.client.code = ''
 		this.client.name = ''
-		this.client.contact = ''
+		this.client.cell = ''
 		this.client.billing = ''
 		this.client.shipping = ''
 		this.client.email = ''

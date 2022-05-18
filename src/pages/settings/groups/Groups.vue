@@ -110,8 +110,8 @@
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
 import {Loading} from "quasar";
-import {GroupInterface} from "src/customs/interfaces/group.interface";
 import {ResponseStatusEnum} from "src/customs/enum/response-status.enum";
+import {GroupInterface} from "../../../customs/interfaces/group.interface";
 
 @Component({})
 export default class Groups extends Vue {

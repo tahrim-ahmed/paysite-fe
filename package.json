@@ -1,8 +1,8 @@
 {
-	"name": "paysite",
+	"name": "dis-invoice",
 	"version": "0.0.1",
-	"description": "A Quasar Framework app for Paysite",
-	"productName": "Pay Site",
+	"description": "A Quasar Framework app for Distributor Invoice",
+	"productName": "Distributor Invoice",
 	"author": "miad <tamiad1618@gmail.com>",
 	"private": true,
 	"scripts": {

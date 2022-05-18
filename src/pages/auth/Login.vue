@@ -1,18 +1,5 @@
 <template>
 	<q-layout>
-		<q-header elevated>
-			<q-toolbar>
-				<q-toolbar-title>
-					Pay Site
-				</q-toolbar-title>
-
-				<div>
-					<q-btn class="q-mr-md" dense flat no-caps stretch label="Register" @click="addDialog = true"/>
-					<q-btn dense flat no-caps stretch label="Tips" @click="tipsDialog = true"/>
-				</div>
-
-			</q-toolbar>
-		</q-header>
 		<q-page-container>
 			<q-page class="flex flex-center">
 				<q-card :style="$q.platform.is.mobile? 'border-radius: 10px; margin-top: 50px' : 'border-radius: 10px; margin-top: 20px'">

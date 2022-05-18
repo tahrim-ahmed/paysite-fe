@@ -5,7 +5,7 @@
 				<div class="col-12 q-px-md q-pt-md">
 					<q-table :columns="columns" :data="rows" :loading="isLoading" :pagination.sync="pagination"
 					         :style="'max-height: 88.5vh'" binary-state-sort card-class="full-width bg-card-theme"
-					         row-key="id" wrap-cells>
+					         row-key="id" wrap-cells @request="onRequest">
 						<template v-slot:no-data="{ icon, message, filter }">
 							<div class="text-overline full-width row justify-center q-py-xl">
 								<q-icon :name="filter ? 'filter_b_and_w' : icon" class="col-1" color="warning" size="2em"/>
@@ -106,9 +106,11 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from 'vue-property-decorator';
-import {Loading} from "quasar";
-import {ProductInterface} from "src/customs/interfaces/product.interface";
+import {Component, Vue, Watch} from 'vue-property-decorator';
+import {Loading, QSpinnerClock} from "quasar";
+import {ProductInterface} from "../../customs/interfaces/product.interface";
+import {ResponseStatusEnum} from "../../customs/enum/response-status.enum";
+import {AxiosResponseInterface} from "../../customs/interfaces/axios-response.interface";
 
 @Component({})
 export default class Products extends Vue {
@@ -121,7 +123,7 @@ export default class Products extends Vue {
 	/***************** table ****************/
 	rows: any = [];
 	pagination: any = {
-		sortBy: 'code',
+		sortBy: 'name',
 		descending: false,
 		page: 1,
 		rowsPerPage: 15,
@@ -132,8 +134,8 @@ export default class Products extends Vue {
 	columns: any = [
 		{
 			label: 'Product Name',
-			name: 'productName',
-			field: 'productName',
+			name: 'name',
+			field: 'name',
 			align: 'left',
 			sortable: true
 		},{
@@ -170,6 +172,13 @@ export default class Products extends Vue {
 		})
 	}
 
+	@Watch('filter', {immediate: true})
+	onFilter() {
+		this.onRequest({
+			pagination: this.pagination
+		})
+	}
+
 
 	onRequest({pagination}: any = {}) {
 		if (pagination) {
@@ -179,10 +188,24 @@ export default class Products extends Vue {
 		let url = 'product/pagination?page=' + this.pagination.page +
 				'&limit=' + this.pagination.rowsPerPage
 
-		this.$axios.get(url).then(value => {
-			this.rows = value.data
+		this.$axios.get(url).then(async (response) => {
+			if (!(response instanceof Error)) {
+				const res = response.data as AxiosResponseInterface
+
+				if (res.error) {
+					this.$q.notify({
+						message: res.message,
+						type: 'negative'
+					})
+				} else {
+					if (res.status === ResponseStatusEnum.SUCCESS) {
+						this.rows = res?.page?.data || []
+						this.pagination.rowsNumber = res.page.count
+					}
+				}
+			}
 		}).finally(() => {
-			this.isLoading = false
+			this.isLoading = false;
 		})
 	}
 
@@ -191,19 +214,20 @@ export default class Products extends Vue {
 	}
 
 	saveProduct() {
-		Loading.show()
-		this.$axios.post('products/save', {
-			product: this.product,
-		}).then(value => {
-			this.$q.notify({
-				message: 'Product Added Success!',
-				type: 'positive'
-			})
+		//@ts-ignore
+		Loading.show({spinner: QSpinnerClock, spinnerSize: '5rem', backgroundColor: 'grey'})
+		this.$axios.post('product', this.product).then(response => {
+			if (!(response instanceof Error)) {
+				const res = response.data as AxiosResponseInterface
+				this.$q.notify({
+					message: res.message,
+					type: res.status === ResponseStatusEnum.CREATED ? 'positive' : 'negative'
+				})
+				this.onFilter()
+			}
 		}).finally(() => {
+			this.closeAddDialog();
 			Loading.hide()
-			this.product.name = ''
-			this.product.packSize = ''
-			this.addDialog = false
 		})
 	}
 

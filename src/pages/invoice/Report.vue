@@ -204,10 +204,10 @@
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
 import {Loading} from "quasar";
-import {InvoiceInterface} from "src/customs/interfaces/invoice.interface";
 import {AxiosResponseInterface} from "src/customs/interfaces/axios-response.interface";
 import {ResponseStatusEnum} from "src/customs/enum/response-status.enum";
-import {ProductInterface} from "src/customs/interfaces/product.interface";
+import {InvoiceInterface} from "../../customs/interfaces/invoice.interface";
+import {ProductInterface} from "../../customs/interfaces/product.interface";
 
 interface AddMoreInterface {
 	product: ProductInterface,
