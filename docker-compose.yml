@@ -1,0 +1,16 @@
+version: "3.7"
+
+services:
+  production:
+    container_name: distributor-frontend
+    image: 'distributor-frontend'
+    build:
+      context: .
+      target: production
+      dockerfile: ./Dockerfile
+    ports:
+      - "4901:80"
+      - "4902:80"
+      - "4903:80"
+      - "4904:80"
+      - "4905:80"

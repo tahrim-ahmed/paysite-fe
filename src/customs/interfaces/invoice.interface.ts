@@ -8,12 +8,12 @@ interface invoiceDetailsInterface {
 
 export interface InvoiceInterface {
 	id?: string
-	client: string
+	clientID: string
 	totalTP: number
 	totalMRP: number
 	totalCommission: number
 	others: number
 	totalProfit: number
 	platform: string
-	products: invoiceDetailsInterface[]
+	createInvoiceDetailsDto: invoiceDetailsInterface[]
 }

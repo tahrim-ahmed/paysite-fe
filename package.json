@@ -6,8 +6,12 @@
 	"author": "miad <tamiad1618@gmail.com>",
 	"private": true,
 	"scripts": {
+		"dev:spa": "quasar dev",
 		"dev:capacitor": "quasar dev -m capacitor -T android",
-		"dev": "quasar dev"
+		"build:spa": "quasar build",
+		"build:capacitor": "quasar build -m capacitor -T android --ide",
+		"install:modules": "yarn install",
+		"postinstall:modules": "cd src-capacitor && yarn install"
 	},
 	"dependencies": {
 		"@capacitor/core": "^2.4.7",
@@ -16,6 +20,7 @@
 		"axios": "^0.21.1",
 		"core-js": "^3.6.5",
 		"jwt-decode": "^3.1.2",
+		"moment": "^2.29.3",
 		"quasar": "^1.0.0",
 		"vue-class-component": "^7.2.2",
 		"vue-property-decorator": "^8.3.0"
